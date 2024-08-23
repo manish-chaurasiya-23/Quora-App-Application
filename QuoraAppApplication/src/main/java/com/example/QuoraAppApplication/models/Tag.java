@@ -2,14 +2,16 @@ package com.example.QuoraAppApplication.models;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.ManyToMany;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.util.Set;
 
-@Data
+@Builder
+@Getter
+@Setter
 @Entity
 @NoArgsConstructor
+@AllArgsConstructor
 public class Tag extends BaseModel{
     private String name;
 

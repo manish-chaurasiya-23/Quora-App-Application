@@ -1,11 +1,15 @@
 package com.example.QuoraAppApplication.models;
 
 import jakarta.persistence.*;
-import lombok.Data;
+import lombok.*;
 
 import java.util.Set;
 
-@Data
+@Getter
+@Setter
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 @Entity
 public class Comment extends BaseModel{
     private String content;
