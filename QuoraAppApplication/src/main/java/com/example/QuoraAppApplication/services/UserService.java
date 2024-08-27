@@ -6,6 +6,7 @@ import com.example.QuoraAppApplication.models.User;
 import com.example.QuoraAppApplication.repositories.TagRepository;
 import com.example.QuoraAppApplication.repositories.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -18,6 +19,9 @@ public class UserService {
 
     @Autowired
     private TagRepository tagRepository;
+
+    @Autowired
+    private BCryptPasswordEncoder bCryptPasswordEncoder;
 
     public List<User> getAllUsers() {
         return userRepository.findAll();
@@ -38,7 +42,7 @@ public class UserService {
     public User createUser(UserDTO userDTO) {
         User user = new User();
         user.setUsername(userDTO.getUsername());
-        user.setPassword(userDTO.getPassword());
+        user.setPassword(bCryptPasswordEncoder.encode(userDTO.getPassword()));
         return userRepository.save(user);
     }
 
