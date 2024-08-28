@@ -13,10 +13,12 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.web.servlet.config.annotation.CorsRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 @Configuration
 @EnableWebSecurity
-public class SpringSecurity {
+public class SpringSecurity implements WebMvcConfigurer {
 
     @Bean
     public UserDetailsService userDetailsService() {
@@ -27,6 +29,7 @@ public class SpringSecurity {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
        return http
                .csrf(AbstractHttpConfigurer::disable)
+               .cors(AbstractHttpConfigurer::disable)
                .authorizeHttpRequests(
                        auth -> auth.requestMatchers("api/v1/*").permitAll()
                )
@@ -49,5 +52,10 @@ public class SpringSecurity {
     @Bean
     public BCryptPasswordEncoder bCryptPasswordEncoder(){
         return new BCryptPasswordEncoder();
+    }
+
+    @Override
+    public void addCorsMappings(CorsRegistry registry) {
+        registry.addMapping("/**").allowedOriginPatterns("http://localhost:8080").allowedMethods("GET","POST","PUT","DELETE");
     }
 }
