@@ -20,7 +20,7 @@ public class JwtService {
     @Value("${jwt.secret}")
     private String SECRET;
 
-    public String CreateToken(Map<String, Object> payload, String email) {
+    public String createToken(Map<String, Object> payload, String email) {
         Date now = new Date();
         Date expiryDate = new Date(now.getTime() + expiry*1000L);
         return Jwts.builder()
