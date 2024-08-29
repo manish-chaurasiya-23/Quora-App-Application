@@ -29,14 +29,15 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-web'
 	compileOnly 'org.projectlombok:lombok'
 	developmentOnly 'org.springframework.boot:spring-boot-devtools'
-	runtimeOnly 'com.mysql:mysql-connector-j'
+	runtimeOnly 'mysql:mysql-connector-java:8.0.33' // Ensure this version is compatible
 	annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
 	annotationProcessor 'org.projectlombok:lombok'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testImplementation 'org.springframework.security:spring-security-test'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
-	// https://mvnrepository.com/artifact/io.jsonwebtoken/jjwt
 	implementation 'io.jsonwebtoken:jjwt:0.12.5'
+	implementation 'org.flywaydb:flyway-core:9.22.0' // Updated Flyway version
+	implementation 'org.flywaydb:flyway-mysql:9.22.0' // Ensure Flyway MySQL plugin is also updated
 }
 
 tasks.named('test') {

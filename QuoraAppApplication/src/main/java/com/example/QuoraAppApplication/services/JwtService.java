@@ -5,9 +5,11 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+
+import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
-import java.security.Key;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
 
@@ -32,7 +34,11 @@ public class JwtService {
                 .compact();
     }
 
-    private Key getSignInKey(){
+    public String createToken(String email) {
+        return createToken(new HashMap<>(), email);
+    }
+
+    private SecretKey getSignInKey(){
         return Keys.hmacShaKeyFor(SECRET.getBytes(StandardCharsets.UTF_8));
     }
 
@@ -44,19 +50,20 @@ public class JwtService {
     private Claims extractAllPayloads(String token) {
         return Jwts
                 .parser()
-                .setSigningKey(getSignInKey())
+                .verifyWith(getSignInKey())
                 .build()
-                .parseClaimsJws(token)
-                .getBody();
+                .parseSignedClaims(token)
+                .getPayload();
     }
 
-    public String extractUsername(String token) {
+    public String extractEmail(String token) {
         return extractClaim(token, Claims::getSubject);
     }
 
-    public boolean isTokenValid(String token, String email) {
-        final String userEmail = extractUsername(token);
-        return userEmail.equals(email) && !isTokenExpired(token);
+    public Boolean validateToken(String token, String email) {
+        System.out.println("Debugging");
+        final String userEmailFetchedFromToken = extractEmail(token);
+        return (userEmailFetchedFromToken.equals(email)) && !isTokenExpired(token);
     }
 
     private boolean isTokenExpired(String token) {

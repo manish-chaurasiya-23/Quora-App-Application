@@ -23,6 +23,7 @@ public class AuthUserDetails extends User implements UserDetails {
 
     @Override
     public String getUsername(){
+        System.out.println("Testing");
         return this.username;
     }
 
