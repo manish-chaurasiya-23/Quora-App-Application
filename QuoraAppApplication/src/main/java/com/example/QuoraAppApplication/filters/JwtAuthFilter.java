@@ -28,9 +28,6 @@ public class JwtAuthFilter extends OncePerRequestFilter {
     @Autowired
     private UserDetailsServiceImplementation userDetailsService;
 
-    private final RequestMatcher uriMatcher =
-            new AntPathRequestMatcher("/api/v1/auth/validate", HttpMethod.GET.name());
-
     private final JwtService jwtService;
 
     public JwtAuthFilter(JwtService jwtService) {
@@ -74,7 +71,8 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
-        RequestMatcher matcher = new NegatedRequestMatcher(uriMatcher);
-        return matcher.matches(request);
+        RequestMatcher validateGETMatcher = new AntPathRequestMatcher("/api/v1/auth/**", HttpMethod.GET.name());
+        RequestMatcher validatePOSTMatcher = new AntPathRequestMatcher("/api/v1/auth/**", HttpMethod.POST.name());
+        return validateGETMatcher.matches(request) || validatePOSTMatcher.matches(request);
     }
 }

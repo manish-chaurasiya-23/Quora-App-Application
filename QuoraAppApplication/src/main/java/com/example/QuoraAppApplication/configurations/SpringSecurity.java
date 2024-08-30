@@ -39,8 +39,7 @@ public class SpringSecurity implements WebMvcConfigurer {
                 .cors(cors -> cors.disable())
                 .authorizeHttpRequests(auth ->
                         auth
-                                .requestMatchers("/api/v1/auth/signup/*").permitAll()
-                                .requestMatchers("/api/v1/auth/signin/*").permitAll()
+                                .requestMatchers("/api/v1/auth/*").permitAll()
                                 .anyRequest().authenticated()
                 )
                 .authenticationProvider(authenticationProvider())
