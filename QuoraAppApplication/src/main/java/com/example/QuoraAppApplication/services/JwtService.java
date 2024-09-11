@@ -26,43 +26,42 @@ public class JwtService {
         Date now = new Date();
         Date expiryDate = new Date(now.getTime() + expiry*1000L);
         return Jwts.builder()
-                .claims(payload)
-                .issuedAt(new Date(System.currentTimeMillis()))
-                .expiration(expiryDate)
-                .subject(email)
+                .setClaims(payload)
+                .setIssuedAt(new Date(System.currentTimeMillis()))
+                .setExpiration(expiryDate)
+                .setSubject(email)
                 .signWith(getSignInKey())
                 .compact();
-    }
-
-    public String createToken(String email) {
-        return createToken(new HashMap<>(), email);
     }
 
     private SecretKey getSignInKey(){
         return Keys.hmacShaKeyFor(SECRET.getBytes(StandardCharsets.UTF_8));
     }
 
-    public <T> T extractClaim(String token, Function<Claims, T> claimsResolver){
-        final Claims claims = extractAllPayloads(token);
+    public <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
+        final Claims claims = extractAllClaims(token);
         return claimsResolver.apply(claims);
     }
 
-    private Claims extractAllPayloads(String token) {
-        return Jwts
-                .parser()
-                .verifyWith(getSignInKey())
+    private Claims extractAllClaims(String token) {
+        return Jwts.parserBuilder()
+                .setSigningKey(getSignInKey())
                 .build()
-                .parseSignedClaims(token)
-                .getPayload();
+                .parseClaimsJws(token)
+                .getBody();
     }
 
     public String extractEmail(String token) {
-        return extractClaim(token, Claims::getSubject);
+        System.out.println("Debugging");
+        String email =  extractClaim(token, Claims::getSubject);
+        System.out.println("Extracted email is : "+email );
+        return email;
     }
 
     public Boolean validateToken(String token, String email) {
-        System.out.println("Debugging");
+        System.out.println("Debugging 2");
         final String userEmailFetchedFromToken = extractEmail(token);
+        System.out.println("Extracted email2 is : "+userEmailFetchedFromToken );
         return (userEmailFetchedFromToken.equals(email)) && !isTokenExpired(token);
     }
 

@@ -17,7 +17,8 @@ public class QuestionController {
     private QuestionService questionService;
 
     @GetMapping
-    public List<Question> getAllQuestions(@RequestParam int page, @RequestParam int size) {
+    public List<Question> getAllQuestions(@RequestParam(defaultValue = "0") int page,
+                                          @RequestParam(defaultValue = "10") int size) {
         return questionService.getQuestions(page, size);
     }
 
