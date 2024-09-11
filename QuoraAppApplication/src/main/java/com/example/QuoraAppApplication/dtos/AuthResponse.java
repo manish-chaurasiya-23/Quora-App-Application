@@ -10,4 +10,5 @@ import lombok.*;
 public class AuthResponse {
     private Boolean success;
     private String username;
+    private String jwtToken;
 }

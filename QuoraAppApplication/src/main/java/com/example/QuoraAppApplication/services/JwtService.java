@@ -9,7 +9,6 @@ import org.springframework.stereotype.Service;
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
 
@@ -26,34 +25,29 @@ public class JwtService {
         Date now = new Date();
         Date expiryDate = new Date(now.getTime() + expiry*1000L);
         return Jwts.builder()
-                .claims(payload)
-                .issuedAt(new Date(System.currentTimeMillis()))
-                .expiration(expiryDate)
-                .subject(email)
+                .setClaims(payload)
+                .setIssuedAt(new Date(System.currentTimeMillis()))
+                .setExpiration(expiryDate)
+                .setSubject(email)
                 .signWith(getSignInKey())
                 .compact();
-    }
-
-    public String createToken(String email) {
-        return createToken(new HashMap<>(), email);
     }
 
     private SecretKey getSignInKey(){
         return Keys.hmacShaKeyFor(SECRET.getBytes(StandardCharsets.UTF_8));
     }
 
-    public <T> T extractClaim(String token, Function<Claims, T> claimsResolver){
-        final Claims claims = extractAllPayloads(token);
+    public <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
+        final Claims claims = extractAllClaims(token);
         return claimsResolver.apply(claims);
     }
 
-    private Claims extractAllPayloads(String token) {
-        return Jwts
-                .parser()
-                .verifyWith(getSignInKey())
+    private Claims extractAllClaims(String token) {
+        return Jwts.parserBuilder()
+                .setSigningKey(getSignInKey())
                 .build()
-                .parseSignedClaims(token)
-                .getPayload();
+                .parseClaimsJws(token)
+                .getBody();
     }
 
     public String extractEmail(String token) {
@@ -61,7 +55,6 @@ public class JwtService {
     }
 
     public Boolean validateToken(String token, String email) {
-        System.out.println("Debugging");
         final String userEmailFetchedFromToken = extractEmail(token);
         return (userEmailFetchedFromToken.equals(email)) && !isTokenExpired(token);
     }

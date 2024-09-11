@@ -7,6 +7,8 @@ import com.example.QuoraAppApplication.models.User;
 import com.example.QuoraAppApplication.services.JwtService;
 import com.example.QuoraAppApplication.services.UserDetailsServiceImplementation;
 import com.example.QuoraAppApplication.services.UserService;
+import io.jsonwebtoken.ExpiredJwtException;
+import jakarta.annotation.Nonnull;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -16,8 +18,10 @@ import org.springframework.http.*;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
@@ -55,35 +59,52 @@ public class AuthController {
 
             Map<String, Object> payload = new HashMap<>();
             payload.put("username", authRequestDTO.getUsername());
-            String jwtToken = jwtService.createToken(payload, authentication.getPrincipal().toString());
-            ResponseCookie cookie = ResponseCookie.from("JwtToken", jwtToken).httpOnly(true).secure(false).maxAge(cookieExpiry).build();
-            response.setHeader(HttpHeaders.SET_COOKIE,cookie.toString());
-            return new ResponseEntity<>(AuthResponse.builder().username(authRequestDTO.getUsername()).success(true).build(), HttpStatus.OK);
+            String jwtToken = jwtService.createToken(payload, authRequestDTO.getUsername());
+            return new ResponseEntity<>(AuthResponse.builder().username(authRequestDTO.getUsername()).success(true).jwtToken(jwtToken).build(), HttpStatus.OK);
         } else {
             throw new UsernameNotFoundException("User not found");
         }
     }
 
     @GetMapping("/validate")
-    public ResponseEntity<?> validate(HttpServletRequest request) {
-        String token = null;
-        if (request.getCookies() != null) {
-            for (Cookie cookie : request.getCookies()) {
-                if (cookie.getName().equals("JwtToken")) {
-                    token = cookie.getValue();
+    public ResponseEntity<?> validate(@Nonnull HttpServletRequest request) {
+        final String token = request.getHeader("Authorization");
+        try {
+            if (token == null || !token.startsWith("Bearer ")) {
+                return new ResponseEntity<>("Invalid Request", HttpStatus.BAD_REQUEST);
+            }
+
+            // Remove the "Bearer " prefix from the token
+            String actualToken = token.substring(7);
+
+            // Extract the email from the token
+            String email = jwtService.extractEmail(actualToken);
+            System.out.println("Incoming Email: " + email);
+
+            // Proceed if the email is not null
+            if(email != null) {
+                // Load user details based on the extracted email
+                UserDetails userDetails = userDetailsService.loadUserByUsername(email);
+
+                // Validate the token using the extracted email
+                if (jwtService.validateToken(actualToken, userDetails.getUsername())) {
+                    UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken = new UsernamePasswordAuthenticationToken(userDetails, null, null);
+                    usernamePasswordAuthenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+
+                    // Set the authentication in the context
+                    SecurityContextHolder.getContext().setAuthentication(usernamePasswordAuthenticationToken);
                 }
             }
+        } catch (ExpiredJwtException e) {
+            return new ResponseEntity<>("Token Expired", HttpStatus.UNAUTHORIZED);
+
+        } catch (UsernameNotFoundException e) {
+            return new ResponseEntity<>("User not found", HttpStatus.UNAUTHORIZED);
+
+        } catch (Exception e) {
+            return new ResponseEntity<>("An error occurred", HttpStatus.INTERNAL_SERVER_ERROR);
+
         }
-        if (token == null) {
-            return new ResponseEntity<>("Unauthorized", HttpStatus.UNAUTHORIZED);
-        }
-        String email = jwtService.extractEmail(token);
-        if (email != null) {
-            UserDetails userDetails = userDetailsService.loadUserByUsername(email);
-            if (jwtService.validateToken(token, userDetails.getUsername())) {
-                return new ResponseEntity<>("Success", HttpStatus.OK);
-            }
-        }
-        return new ResponseEntity<>("Unauthorized", HttpStatus.UNAUTHORIZED);
+        return new ResponseEntity<>("Authorized", HttpStatus.OK);
     }
 }
