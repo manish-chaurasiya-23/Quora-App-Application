@@ -66,17 +66,14 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                 }
             }
         } catch (ExpiredJwtException e) {
-            System.out.println("Token expired: " + e.getMessage());
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             response.getWriter().write("Token expired");
 
         } catch (UsernameNotFoundException e) {
-            System.out.println("User not found for email: " + e.getMessage());
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             response.getWriter().write("User not found");
 
         } catch (Exception e) {
-            System.out.println("Exception occurred: " + e.getMessage());
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             response.getWriter().write("An error occurred");
 
